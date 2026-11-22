@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COMPUTER ACADEMY GOH – Online Admission Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@600;700;800&display=swap');
+
+    body {
+      font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+
+    .devanagari {
+      font-family: 'Noto Sans Devanagari', sans-serif;
+    }
+
+    .form-box {
+      border: 1.5px solid #0f172a;
+      background: #ffffff;
+    }
+
+    .section-banner {
+      background: #0f172a;
+      color: #facc15;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 6px 12px;
+      border-bottom: 1.5px solid #0f172a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #1e293b;
+      letter-spacing: 0.02em;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .form-input {
+      width: 100%;
+      border: 1px solid #64748b;
+      border-radius: 4px;
+      padding: 6px 9px;
+      font-size: 13px;
+      color: #0f172a;
+      background: #ffffff;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #0f172a;
+      box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.65);
+    }
+
+    .report-copy {
+      border: 2px solid #0f172a;
+      background: #ffffff;
+      padding: 14px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+
+    @page landscape_print {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+
+    #print-staging {
+      display: none;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .no-print,
+      header,
+      nav,
+      footer,
+      #app-shell,
+      #toast-container,
+      #student-modal {
+        display: none !important;
+      }
+
+      #print-staging {
+        display: block !important;
+        width: 100% !important;
+      }
+
+      body[data-print-mode="all-students"] {
+        page: landscape_print;
+      }
+
+      #print-staging table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
+
+      #print-staging thead {
+        display: table-header-group !important;
+      }
+
+      #print-staging tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 max-w-sm"></div>
+
+  <!-- MAIN APP SHELL -->
+  <div id="app-shell" class="min-h-screen flex flex-col">
+    <!-- 1. WEBSITE HEADER DESIGN -->
+    <header class="bg-white border-b-4 border-yellow-400 shadow-sm">
+      <div class="bg-slate-950 text-yellow-400 text-xs py-1.5 px-4">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 font-semibold">
+          <span class="devanagari text-white bg-red-700 px-2.5 py-0.5 rounded font-bold">भारत सरकार द्वारा मान्यता प्राप्त</span>
+          <span>ISO 9001:2005 Certified</span>
+          <span>Registered Under MSME</span>
+          <span>www.cabihar.in</span>
+          <span>computeracademy.edu@gmail.com</span>
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-16 h-16 rounded-xl bg-slate-950 border-2 border-yellow-400 flex items-center justify-center shrink-0 shadow">
+            <svg viewBox="0 0 64 64" class="w-11 h-11" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="12" width="48" height="32" rx="4" stroke="#facc15" stroke-width="3.5"/>
+              <path d="M22 52H42M32 44V52" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M18 24L26 28L18 32" stroke="#facc15" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="30" y1="32" x2="42" y2="32" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div class="inline-block bg-yellow-400 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded uppercase tracking-wider mb-1">
+              Online Admission Management System
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight leading-none">
+              COMPUTER ACADEMY <span class="bg-yellow-400 px-1.5 rounded">GOH</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-700 font-medium mt-1">
+              Near Bus Stand, Goh Rafiganj Road, Goh (Aurangabad), Bihar
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-slate-950 text-white border-2 border-yellow-400 rounded-lg px-4 py-2.5 text-xs sm:text-sm space-y-0.5 w-full lg:w-auto">
+          <div><span class="text-yellow-400 font-bold">Director:</span> Ranjan Sharma</div>
+          <div><span class="text-yellow-400 font-bold">Contact:</span> <a href="tel:9556060616" class="underline font-bold">9556060616</a></div>
+          <div><span class="text-yellow-400 font-bold">Storage:</span> <span id="db-status-badge" class="text-emerald-400 font-semibold">Permanent DB Ready</span></div>
+        </div>
+      </div>
+
+      <!-- NAVIGATION -->
+      <nav class="bg-slate-900 text-white border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 flex items-center gap-1 overflow-x-auto py-1.5 text-xs sm:text-sm font-semibold">
+          <button data-nav="home" class="nav-btn px-3 py-1.5 rounded hover:bg-yellow-400 hover:text-slate-950 whitespace-nowrap">1. Home</button>
+          <button data-nav="admission" class="nav-btn px-3 py-1.5 rounded bg-yellow-400 text-slate-950 whitespace-nowrap">2. New Admission</button>
+          <button data-nav="student-login" class="nav-btn px-3 py-1.5 rounded hover:bg-yellow-400 hover:text-slate-950 whitespace-nowrap">3. Student Login</button>
+          <button data-nav="courses" class="nav-btn px-3 py-1.5 rounded hover:bg-yellow-400 hover:text-slate-950 whitespace-nowrap">4. Courses</button>
+          <button data-nav="report" class="nav-btn px-3 py-1.5 rounded hover:bg-yellow-400 hover:text-slate-950 whitespace-nowrap">5. Admission Report</button>
+          <button data-nav="admin-login" class="nav-btn px-3 py-1.5 rounded hover:bg-yellow-400 hover:text-slate-950 whitespace-nowrap">6. Admin Login</button>
+          <button data-nav="contact" class="nav-btn px-3 py-1.5 rounded hover:bg-yellow-400 hover:text-slate-950 whitespace-nowrap">7. Contact Us</button>
+        </div>
+      </nav>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+      <!-- HOME -->
+      <section id="view-home" class="hidden space-y-6">
+        <div class="bg-slate-950 text-white rounded-xl p-6 sm:p-8 border-4 border-yellow-400 shadow">
+          <span class="bg-yellow-400 text-slate-950 text-xs font-black px-3 py-1 rounded uppercase">Welcome to Computer Academy Goh</span>
+          <h2 class="text-2xl sm:text-4xl font-black mt-3">Job-Oriented Computer Training in Goh, Aurangabad</h2>
+          <p class="text-slate-300 mt-2 max-w-3xl text-sm sm:text-base">
+            Recognized under MSME &amp; ISO 9001:2005 certified institute led by Director <strong>Ranjan Sharma</strong>. Instant roll number generation (<code>CA26-XXXX</code>), dual-copy A4 admission receipts, and permanent database records.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-3">
+            <button onclick="switchView('admission')" class="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-extrabold px-5 py-2.5 rounded-lg text-sm">
+              Apply for New Admission
+            </button>
+            <button onclick="switchView('courses')" class="bg-white hover:bg-slate-100 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm">
+              Explore Courses
+            </button>
+            <button onclick="switchView('admin-login')" class="border border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm">
+              Admin Dashboard
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- NEW ADMISSION FORM -->
+      <section id="view-admission" class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-yellow-400 text-slate-950 px-4 py-2.5 rounded-lg border-2 border-slate-950">
+          <div>
+            <h2 class="text-lg sm:text-xl font-black uppercase tracking-tight">Student Admission Form</h2>
+            <p class="text-xs font-semibold">COMPUTER ACADEMY GOH – Official Admission Application</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="printAdmissionForm()" class="bg-slate-950 text-yellow-400 hover:bg-slate-800 font-bold text-xs px-3.5 py-2 rounded shadow">
+              PRINT ADMISSION FORM
+            </button>
+          </div>
+        </div>
+
+        <form id="admission-form" class="form-box rounded-lg overflow-hidden shadow-sm" novalidate>
+          <!-- PERSONAL DETAILS -->
+          <div class="section-banner">
+            <span>Personal Details</span>
+            <span class="text-xs text-white font-normal">* Required Fields</span>
+          </div>
+          <div class="p-4 grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div class="md:col-span-6">
+              <label class="field-label" for="studentName">1. Student Name *</label>
+              <input id="studentName" name="studentName" type="text" required placeholder="Enter full name of student" class="form-input" />
+            </div>
+
+            <div class="md:col-span-3">
+              <label class="field-label" for="dob">2. Date of Birth (DD-MM-YYYY) *</label>
+              <input
+                id="dob"
+                name="dob"
+                type="text"
+                inputmode="numeric"
+                maxlength="10"
+                required
+                placeholder="DD-MM-YYYY (e.g. 15-08-2005)"
+                class="form-input font-mono"
+              />
+              <p id="dob-feedback" class="text-[11px] mt-1 text-slate-600">Type manually in DD-MM-YYYY format</p>
+            </div>
+
+            <div class="md:col-span-3">
+              <label class="field-label" for="gender">3. Gender *</label>
+              <select id="gender" name="gender" required class="form-input">
+                <option value="">-- Select Gender --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-4">
+              <label class="field-label" for="fatherName">4. Father's Name *</label>
+              <input id="fatherName" name="fatherName" type="text" required placeholder="Father's full name" class="form-input" />
+            </div>
+
+            <div class="md:col-span-4">
+              <label class="field-label" for="motherName">5. Mother's Name *</label>
+              <input id="motherName" name="motherName" type="text" required placeholder="Mother's full name" class="form-input" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="field-label" for="community">6. Community</label>
+              <input id="community" name="community" type="text" placeholder="GEN / BC / EBC / SC / ST" class="form-input" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="field-label" for="nationality">7. Nationality</label>
+              <input id="nationality" name="nationality" type="text" value="Indian" class="form-input" />
+            </div>
+
+            <!-- STUDENT PHOTO UPLOAD -->
+            <div class="md:col-span-5 border border-slate-400 rounded p-3 bg-slate-50">
+              <label class="field-label" for="photoInput">8. Student Passport Size Photo (JPG, JPEG, PNG) *</label>
+              <div class="flex items-center gap-3">
+                <img
+                  id="photo-preview"
+                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='112' viewBox='0 0 96 112'><rect width='96' height='112' fill='%23e2e8f0'/><text x='50%25' y='46%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='11' fill='%23334155'>PASSPORT</text><text x='50%25' y='60%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='11' fill='%23334155'>PHOTO</text></svg>"
+                  alt="Student Photo Preview"
+                  class="w-24 h-28 object-cover border-2 border-slate-900 rounded bg-white shrink-0"
+                />
+                <div class="space-y-2 flex-1">
+                  <input id="photoInput" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="block w-full text-xs text-slate-700 file:mr-2 file:py-1.5 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-yellow-400 hover:file:bg-slate-800" />
+                  <div class="flex gap-2">
+                    <button type="button" onclick="document.getElementById('photoInput').click()" class="text-xs font-bold underline text-slate-900">Change Photo</button>
+                    <button type="button" id="clear-photo-btn" class="text-xs font-semibold text-red-700 hover:underline">Remove</button>
+                  </div>
+                  <p id="photo-info" class="text-[11px] text-slate-600">Auto-resized &amp; optimized for report &amp; PDF.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="field-label" for="studentMobile">9. Student Mobile Number *</label>
+                <input id="studentMobile" name="studentMobile" type="tel" maxlength="10" required placeholder="10-digit mobile number" class="form-input font-mono" />
+              </div>
+              <div>
+                <label class="field-label" for="parentMobile">10. Parents Mobile Number *</label>
+                <input id="parentMobile" name="parentMobile" type="tel" maxlength="10" required placeholder="10-digit parent number" class="form-input font-mono" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="field-label" for="email">11. Email Address</label>
+                <input id="email" name="email" type="email" placeholder="student@example.com" class="form-input" />
+              </div>
+            </div>
+                </div>
+                
+          <!-- ADDRESS DETAILS -->
+          <div class="section-banner">
+            <span>Address Details</span>
+          </div>
+          <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label class="field-label" for="villageWard">1. Village / Ward Number *</label>
+              <input id="villageWard" name="villageWard" type="text" required placeholder="Village or Ward No." class="form-input" />
+            </div>
+            <div>
+              <label class="field-label" for="policeStation">2. Police Station *</label>
+              <input id="policeStation" name="policeStation" type="text" required placeholder="e.g. Goh" class="form-input" />
+            </div>
+            <div>
+              <label class="field-label" for="postOffice">3. Post Office *</label>
+              <input id="postOffice" name="postOffice" type="text" required placeholder="Post Office" class="form-input" />
+            </div>
+            <div>
+              <label class="field-label" for="district">4. District *</label>
+              <input id="district" name="district" type="text" value="Aurangabad" required class="form-input" />
+            </div>
+            <div>
+              <label class="field-label" for="state">5. State *</label>
+              <input id="state" name="state" type="text" value="Bihar" required class="form-input" />
+            </div>
+            <div>
+              <label class="field-label" for="pinCode">6. PIN Code *</label>
+              <input id="pinCode" name="pinCode" type="text" maxlength="6" required placeholder="6-digit PIN" class="form-input font-mono" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="field-label" for="aadhaarNumber">7. Aadhaar Number (Optional)</label>
+              <input id="aadhaarNumber" name="aadhaarNumber" type="text" maxlength="12" placeholder="Optional 12-digit ID" class="form-input font-mono" />
+            </div>
+          </div>
+
+          <!-- OTHER DETAILS -->
+          <div class="section-banner">
+            <span>Other Details</span>
+          </div>
+          <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="field-label" for="referralCode">1. Referral Code</label>
+              <input id="referralCode" name="referralCode" type="text" placeholder="Optional referral code" class="form-input" />
+            </div>
+            <div>
+              <label class="field-label" for="referralName">2. Name of Referral Student</label>
+              <input id="referralName" name="referralName" type="text" placeholder="Name of referring student" class="form-input" />
+            </div>
+          </div>
+
+          <!-- QUALIFICATION & COMPUTER COURSE DETAILS -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 border-t border-slate-900">
+            <div class="border-b lg:border-b-0 lg:border-r border-slate-900">
+              <div class="section-banner"><span>Qualification *</span></div>
+              <div class="p-4 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs font-semibold">
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="qualification" value="High School" required /> High School
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="qualification" value="Matric" /> Matric
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="qualification" value="Intermediate" /> Intermediate
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="qualification" value="Graduation" /> Graduation
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="qualification" value="Post Graduation" /> Post Graduation
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="qualification" value="Other" /> Other
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <div class="section-banner"><span>Computer Course Details (Select One or Multiple) *</span></div>
+              <div class="p-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-bold">
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="checkbox" name="courses" value="CCA" /> CCA
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="checkbox" name="courses" value="DCA" /> DCA
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="checkbox" name="courses" value="ADCA" /> ADCA
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="checkbox" name="courses" value="PGDCA" /> PGDCA
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="checkbox" name="courses" value="TALLY" /> TALLY
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50">
+                  <input type="checkbox" name="courses" value="DTP" /> DTP
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2 cursor-pointer hover:bg-yellow-50 col-span-2 sm:col-span-2">
+                  <input type="checkbox" name="courses" value="OTHERS" /> OTHERS
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODE OF PAYMENT & DATE & TIME -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 border-t border-slate-900">
+            <div class="border-b lg:border-b-0 lg:border-r border-slate-900">
+              <div class="section-banner"><span>Mode of Payment *</span></div>
+              <div class="p-4 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-bold">
+                <label class="flex items-center gap-2 border rounded p-2.5 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="paymentMode" value="Monthly" required /> Monthly
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2.5 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="paymentMode" value="Package (3 Months)" /> Package (3 Months)
+                </label>
+                <label class="flex items-center gap-2 border rounded p-2.5 cursor-pointer hover:bg-yellow-50">
+                  <input type="radio" name="paymentMode" value="One Time (12 Months)" /> One Time (12 Months)
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <div class="section-banner"><span>Date &amp; Time *</span></div>
+              <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="field-label" for="admissionDate">Admission Date *</label>
+                  <input id="admissionDate" name="admissionDate" type="date" required class="form-input" />
+                </div>
+                <div>
+                  <label class="field-label" for="batchTime">Batch Time *</label>
+                  <select id="batchTime" name="batchTime" required class="form-input">
+                    <option value="">-- Select Batch Time --</option>
+                    <option value="07:00 AM - 08:00 AM">07:00 AM - 08:00 AM</option>
+                    <option value="08:00 AM - 09:00 AM">08:00 AM - 09:00 AM</option>
+                    <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
+                    <option value="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</option>
+                    <option value="11:00 AM - 12:00 PM">11:00 AM - 12:00 PM</option>
+                    <option value="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</option>
+                    <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
+                    <option value="04:00 PM - 05:00 PM">04:00 PM - 05:00 PM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FINAL SECTION -->
+          <div class="section-banner"><span>Final Section – Student Signature &amp; Submission</span></div>
+          <div class="p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div class="md:col-span-6">
+              <div class="flex items-center justify-between mb-1">
+                <label class="field-label mb-0">Student Signature *</label>
+                <button type="button" id="clear-sig-btn" class="text-xs font-bold text-red-700 hover:underline">Clear Signature</button>
+              </div>
+              <canvas id="signature-pad" width="460" height="90" class="w-full h-24 border-2 border-dashed border-slate-700 rounded bg-slate-50 touch-none cursor-crosshair"></canvas>
+              <p class="text-[11px] text-slate-600 mt-1">Sign above using mouse or touch screen.</p>
+            </div>
+
+            <div class="md:col-span-6 flex flex-wrap gap-3 justify-end">
+              <button type="reset" id="reset-form-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-bold px-5 py-3 rounded-lg text-sm border border-slate-400">
+                Reset Form
+              </button>
+              <button type="submit" id="submit-admission-btn" class="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black px-6 py-3 rounded-lg text-sm border-2 border-slate-950 shadow">
+                SUBMIT ADMISSION FORM
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- STUDENT LOGIN -->
+      <section id="view-student-login" class="hidden max-w-lg mx-auto bg-white border-2 border-slate-950 rounded-xl p-6 shadow">
+        <h2 class="text-xl font-black text-slate-950 uppercase mb-1">Student Login &amp; Report Lookup</h2>
+        <p class="text-xs text-slate-600 mb-4">Enter your Roll Number (e.g. <code>CA26-0001</code>) and registered Mobile Number to open your Admission Report.</p>
+        <form id="student-login-form" class="space-y-3">
+          <div>
+            <label class="field-label" for="stuLookupRoll">Roll Number</label>
+            <input id="stuLookupRoll" type="text" required placeholder="CA26-0001" class="form-input uppercase font-mono" />
+          </div>
+          <div>
+            <label class="field-label" for="stuLookupMobile">Mobile Number</label>
+            <input id="stuLookupMobile" type="tel" required placeholder="10-digit mobile number" class="form-input font-mono" />
+          </div>
+          <button type="submit" class="w-full bg-slate-950 text-yellow-400 font-extrabold py-2.5 rounded-lg text-sm">
+            View My Admission Report
+          </button>
+        </form>
+      </section>
+
+      <!-- COURSES -->
+      <section id="view-courses" class="hidden space-y-4">
+        <div class="bg-slate-950 text-yellow-400 px-4 py-3 rounded-lg border-2 border-yellow-400">
+          <h2 class="text-xl font-black uppercase">Computer Courses Offered</h2>
+          <p class="text-xs text-white">Select one or multiple courses during New Admission.</p>
+        </div>
+        <div id="courses-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- ADMISSION REPORT -->
+      <section id="view-report" class="hidden space-y-4">
+        <div class="bg-slate-950 text-white px-4 py-3 rounded-lg border-2 border-yellow-400 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-black text-yellow-400 uppercase">Admission Report (Student Copy &amp; Office Copy)</h2>
+            <p class="text-xs text-slate-300" id="report-subtitle">Select or submit an admission to generate report.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="btn-print-report" class="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black text-xs px-4 py-2.5 rounded shadow">
+              PRINT ADMISSION REPORT
+            </button>
+            <button type="button" id="btn-download-report-pdf" class="bg-white hover:bg-slate-100 text-slate-950 font-black text-xs px-4 py-2.5 rounded shadow">
+              DOWNLOAD PDF
+            </button>
+          </div>
+        </div>
+
+        <div id="report-container" class="space-y-6">
+          <div class="bg-white border border-slate-300 rounded-lg p-8 text-center text-slate-600 text-sm">
+            No admission report loaded yet. Submit the New Admission Form or look up a student in Student Login / Admin Dashboard.
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN LOGIN -->
+      <section id="view-admin-login" class="hidden max-w-md mx-auto bg-white border-2 border-slate-950 rounded-xl p-6 shadow">
+        <span class="bg-yellow-400 text-slate-950 text-[11px] font-black px-2 py-0.5 rounded uppercase">Authorized Access</span>
+        <h2 class="text-xl font-black text-slate-950 uppercase mt-2 mb-1">Admin Login</h2>
+        <p class="text-xs text-slate-600 mb-4">Sign in to manage all admitted students, prints, PDFs, and backups.</p>
+        <form id="admin-login-form" class="space-y-3">
+          <div>
+            <label class="field-label" for="adminUser">Admin ID / Email</label>
+            <input id="adminUser" type="text" value="admin@cabihar.in" required class="form-input" />
+          </div>
+          <div>
+            <label class="field-label" for="adminPass">Password</label>
+            <input id="adminPass" type="password" value="Goh@2026" required class="form-input" />
+          </div>
+          <p class="text-[11px] text-slate-500">Default Demo Credentials: <code>admin@cabihar.in</code> / <code>Goh@2026</code></p>
+          <button type="submit" class="w-full bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black py-2.5 rounded-lg text-sm border border-slate-950">
+            Login to Admin Dashboard
+          </button>
+        </form>
+      </section>
+
+      <!-- ADMIN DASHBOARD -->
+      <section id="view-admin-dashboard" class="hidden space-y-6">
+        <div class="bg-slate-950 text-white p-4 rounded-xl border-2 border-yellow-400 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-black text-yellow-400 uppercase">Admin Dashboard – Computer Academy Goh</h2>
+            <p class="text-xs text-slate-300">Complete student records, search, filters, A4 prints, PDF exports &amp; 200-admission stress test.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="btn-print-all-students" class="bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black text-xs px-3.5 py-2 rounded">
+              PRINT ALL STUDENTS
+            </button>
+            <button type="button" id="btn-download-all-pdf" class="bg-white hover:bg-slate-100 text-slate-950 font-black text-xs px-3.5 py-2 rounded">
+              DOWNLOAD ALL STUDENTS PDF
+            </button>
+            <button type="button" id="btn-export-excel" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs px-3.5 py-2 rounded">
+              EXPORT EXCEL (.XLSX)
+            </button>
+            <button type="button" id="btn-backup-json" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-black text-xs px-3.5 py-2 rounded">
+              BACKUP JSON
+            </button>
+            <button type="button" id="btn-sim-200" class="bg-purple-400 hover:bg-purple-300 text-slate-950 font-black text-xs px-3.5 py-2 rounded">
+              TEST 200 ADMISSIONS
+            </button>
+            <button type="button" id="btn-admin-logout" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3.5 py-2 rounded">
+              Logout
+            </button>
+          </div>
+        </div>
+
+        <!-- DASHBOARD STATS -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div class="bg-white border-2 border-slate-900 rounded-lg p-3">
+            <div class="text-[11px] font-bold uppercase text-slate-600">Total Students</div>
+            <div id="stat-total" class="text-2xl font-black text-slate-950 mt-1">0</div>
+          </div>
+          <div class="bg-white border-2 border-slate-900 rounded-lg p-3">
+            <div class="text-[11px] font-bold uppercase text-slate-600">Today's Admissions</div>
+            <div id="stat-today" class="text-2xl font-black text-slate-950 mt-1">0</div>
+          </div>
+          <div class="bg-white border-2 border-slate-900 rounded-lg p-3">
+            <div class="text-[11px] font-bold uppercase text-slate-600">Total Courses</div>
+            <div id="stat-courses" class="text-2xl font-black text-slate-950 mt-1">7</div>
+          </div>
+          <div class="bg-white border-2 border-slate-900 rounded-lg p-3">
+            <div class="text-[11px] font-bold uppercase text-slate-600">Monthly Admissions</div>
+            <div id="stat-monthly" class="text-2xl font-black text-slate-950 mt-1">0</div>
+          </div>
+          <div class="bg-white border-2 border-slate-900 rounded-lg p-3">
+            <div class="text-[11px] font-bold uppercase text-slate-600">Payment Records</div>
+            <div id="stat-paid" class="text-2xl font-black text-emerald-700 mt-1">0</div>
+          </div>
+          <div class="bg-white border-2 border-slate-900 rounded-lg p-3">
+            <div class="text-[11px] font-bold uppercase text-slate-600">Pending Payments</div>
+            <div id="stat-pending" class="text-2xl font-black text-red-700 mt-1">0</div>
+          </div>
+        </div>
+
+        <!-- SEARCH & FILTERS -->
+        <div class="bg-white border border-slate-300 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <input id="filter-search" type="text" placeholder="Search Name, Roll No, Mobile, Father..." class="form-input lg:col-span-2" />
+          <select id="filter-course" class="form-input">
+            <option value="">All Courses</option>
+            <option value="CCA">CCA</option>
+            <option value="DCA">DCA</option>
+            <option value="ADCA">ADCA</option>
+            <option value="PGDCA">PGDCA</option>
+            <option value="TALLY">TALLY</option>
+            <option value="DTP">DTP</option>
+            <option value="OTHERS">OTHERS</option>
+          </select>
+          <input id="filter-date" type="date" class="form-input" />
+          <button type="button" id="btn-clear-filters" class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-bold rounded px-3 py-2 text-xs">
+            Reset Filters
+          </button>
+                    </div>
+
+        <!-- ALL ADMITTED STUDENTS TABLE -->
+        <div class="bg-white border-2 border-slate-950 rounded-xl overflow-hidden shadow">
+          <div class="bg-yellow-400 text-slate-950 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b-2 border-slate-950">
+            <h3 class="font-black uppercase text-sm sm:text-base">ALL ADMITTED STUDENTS</h3>
+            <span id="filtered-count-label" class="text-xs font-extrabold">Showing 0 students</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-950 text-yellow-400 uppercase">
+                <tr>
+                  <th class="p-2.5 border border-slate-700">S.No</th>
+                  <th class="p-2.5 border border-slate-700">Student Name</th>
+                  <th class="p-2.5 border border-slate-700">Photo</th>
+                  <th class="p-2.5 border border-slate-700">Roll No</th>
+                  <th class="p-2.5 border border-slate-700">Father's Name</th>
+                  <th class="p-2.5 border border-slate-700">Mobile</th>
+                  <th class="p-2.5 border border-slate-700">Course</th>
+                  <th class="p-2.5 border border-slate-700">Qualification</th>
+                  <th class="p-2.5 border border-slate-700">Admission Date</th>
+                  <th class="p-2.5 border border-slate-700">Payment Mode</th>
+                  <th class="p-2.5 border border-slate-700">Batch Time</th>
+                  <th class="p-2.5 border border-slate-700">View Details</th>
+                  <th class="p-2.5 border border-slate-700">Print / PDF</th>
+                </tr>
+              </thead>
+              <tbody id="admin-students-tbody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+
+          <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div id="pagination-info" class="font-semibold text-slate-700">Page 1 of 1</div>
+            <div class="flex gap-2">
+              <button type="button" id="btn-prev-page" class="px-3 py-1.5 rounded border border-slate-400 bg-white font-bold disabled:opacity-40">Prev</button>
+              <button type="button" id="btn-next-page" class="px-3 py-1.5 rounded border border-slate-400 bg-white font-bold disabled:opacity-40">Next</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT US -->
+      <section id="view-contact" class="hidden bg-white border-2 border-slate-950 rounded-xl p-6 shadow">
+        <h2 class="text-xl font-black text-slate-950 uppercase mb-3">Contact Computer Academy Goh</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div class="space-y-1.5">
+            <p><strong>Director:</strong> Ranjan Sharma</p>
+            <p><strong>Phone / WhatsApp:</strong> 9556060616</p>
+            <p><strong>Email:</strong> computeracademy.edu@gmail.com</p>
+            <p><strong>Website:</strong> www.cabihar.in</p>
+          </div>
+          <div class="space-y-1.5">
+            <p><strong>Address:</strong> Near Bus Stand, Goh Rafiganj Road, Goh (Aurangabad), Bihar</p>
+            <p><strong>Credentials:</strong> भारत सरकार द्वारा मान्यता प्राप्त | ISO 9001:2005 | MSME Registered</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 text-slate-300 text-xs py-4 px-4 border-t-4 border-yellow-400 mt-auto">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+        <span>© 2026 COMPUTER ACADEMY GOH – Near Bus Stand, Goh Rafiganj Road, Goh (Aurangabad)</span>
+        <span>Director: Ranjan Sharma | Contact: 9556060616 | www.cabihar.in</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- STUDENT DETAIL MODAL -->
+  <div id="student-modal" class="fixed inset-0 z-50 hidden bg-black/70 items-center justify-center p-4">
+    <div class="bg-white border-2 border-slate-950 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-5 space-y-4">
+      <div class="flex items-center justify-between border-b pb-2">
+        <h3 id="modal-title" class="text-lg font-black text-slate-950">Student Profile</h3>
+        <button type="button" onclick="closeStudentModal()" class="text-sm font-bold bg-slate-200 px-2.5 py-1 rounded">✕ Close</button>
+      </div>
+      <div id="modal-body" class="space-y-3 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- DEDICATED PRINT STAGING -->
+  <div id="print-staging"></div>
+
+  <script>
+    const DB_NAME = 'ComputerAcademyGoh_DB_v1';
+    const STORE_NAME = 'students';
+    const META_STORE = 'meta';
+    const ADMIN_CREDS = { user: 'admin@cabihar.in', pass: 'Goh@2026' };
+
+    const COURSES_CATALOG = [
+      { code: 'CCA', name: 'Certificate in Computer Application', duration: '3 Months' },
+      { code: 'DCA', name: 'Diploma in Computer Application', duration: '6 Months' },
+      { code: 'ADCA', name: 'Advanced Diploma in Computer Application', duration: '12 Months' },
+      { code: 'PGDCA', name: 'Post Graduate Diploma in Computer Application', duration: '12 Months' },
+      { code: 'TALLY', name: 'Tally Prime with GST & Taxation', duration: '3 Months' },
+      { code: 'DTP', name: 'Desktop Publishing (Photoshop, CorelDraw, PageMaker)', duration: '3 Months' },
+      { code: 'OTHERS', name: 'Special / Custom Computer Module', duration: 'As per Batch' }
+    ];
+
+    const LOGO_DATA_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 64 64">
+        <rect width="64" height="64" rx="10" fill="#0f172a"/>
+        <rect x="8" y="12" width="48" height="32" rx="4" fill="none" stroke="#facc15" stroke-width="3.5"/>
+        <path d="M22 52H42M32 44V52" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M18 24L26 28L18 32" stroke="#facc15" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="30" y1="32" x2="42" y2="32" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    `);
+
+    const DEFAULT_PHOTO_URL = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="96" height="112" viewBox="0 0 96 112">
+        <rect width="96" height="112" fill="#e2e8f0"/>
+        <circle cx="48" cy="40" r="16" fill="#94a3b8"/>
+        <path d="M20 96c0-15 12-26 28-26s28 11 28 26" fill="#94a3b8"/>
+      </svg>
+    `);
+
+    let dbInstance = null;
+    let allStudents = [];
+    let currentReportStudent = null;
+    let uploadedPhotoDataUrl = '';
+    let isAdminLoggedIn = sessionStorage.getItem('cag_admin_auth') === '1';
+    let currentPage = 1;
+    const PAGE_SIZE = 15;
+    let rollLock = Promise.resolve();
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const div = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-900 text-white border-emerald-400',
+        error: 'bg-red-900 text-white border-red-400',
+        info: 'bg-slate-950 text-yellow-400 border-yellow-400'
+      };
+      div.className = `border-l-4 px-4 py-3 rounded shadow-lg text-xs font-semibold ${colors[type] || colors.info}`;
+      div.textContent = msg;
+      container.appendChild(div);
+      setTimeout(() => div.remove(), 4200);
+    }
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        if (dbInstance) return resolve(dbInstance);
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            store.createIndex('rollNumber', 'rollNumber', { unique: true });
+          }
+          if (!db.objectStoreNames.contains(META_STORE)) {
+            db.createObjectStore(META_STORE, { keyPath: 'key' });
+          }
+        };
+        req.onsuccess = () => {
+          dbInstance = req.result;
+          resolve(dbInstance);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function allocateNextRollNumber() {
+      const run = async () => {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction([META_STORE, STORE_NAME], 'readwrite');
+          const metaStore = tx.objectStore(META_STORE);
+          const stuStore = tx.objectStore(STORE_NAME);
+          const getReq = metaStore.get('rollCounter_2026');
+          const allReq = stuStore.getAll();
+
+          Promise.all([
+            new Promise((res, rej) => { getReq.onsuccess = () => res(getReq.result); getReq.onerror = () => rej(getReq.error); }),
+            new Promise((res, rej) => { allReq.onsuccess = () => res(allReq.result || []); allReq.onerror = () => rej(allReq.error); })
+          ]).then(([meta, existing]) => {
+            let maxNum = meta && typeof meta.value === 'number' ? meta.value : 0;
+            for (const s of existing) {
+              const m = /^CA26-(\d+)$/.exec(s.rollNumber || '');
+              if (m) {
+                const n = parseInt(m[1], 10);
+                if (n > maxNum) maxNum = n;
+              }
+            }
+            const nextNum = maxNum + 1;
+            const rollNumber = `CA26-${String(nextNum).padStart(4, '0')}`;
+            metaStore.put({ key: 'rollCounter_2026', value: nextNum });
+            tx.oncomplete = () => resolve(rollNumber);
+            tx.onerror = () => reject(tx.error);
+          }).catch(reject);
+        });
+      };
+
+      rollLock = rollLock.then(run, run);
+      return rollLock;
+    }
+
+    async function saveStudentRecord(record) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const putReq = store.put(record);
+        putReq.onsuccess = () => resolve(record);
+        putReq.onerror = () => reject(putReq.error);
+      });
+    }
+
+    async function getAllStudentsFromDB() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.getAll();
+        req.onsuccess = () => {
+          const list = (req.result || []).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          resolve(list);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function refreshStudentsCache() {
+      allStudents = await getAllStudentsFromDB();
+      updateDashboardStats();
+      renderAdminTable();
+      return allStudents;
+    }
+
+    // NAVIGATION
+    function switchView(viewName) {
+      if (viewName === 'admin-dashboard' && !isAdminLoggedIn) {
+        viewName = 'admin-login';
+      }
+      const views = ['home', 'admission', 'student-login', 'courses', 'report', 'admin-login', 'admin-dashboard', 'contact'];
+      views.forEach((v) => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) el.classList.toggle('hidden', v !== viewName);
+      });
+
+      document.querySelectorAll('.nav-btn').forEach((btn) => {
+        const active = btn.dataset.nav === viewName || (viewName === 'admin-dashboard' && btn.dataset.nav === 'admin-login');
+        btn.classList.toggle('bg-yellow-400', active);
+        btn.classList.toggle('text-slate-950', active);
+      });
+
+      if (viewName === 'admin-dashboard') {
+        refreshStudentsCache();
+      }
+    }
+
+    document.querySelectorAll('.nav-btn').forEach((btn) => {
+      btn.addEventListener('click', () => switchView(btn.dataset.nav));
+    });
+
+    function renderCoursesGrid() {
+      const grid = document.getElementById('courses-grid');
+      grid.innerHTML = COURSES_CATALOG.map((c) => `
+        <div class="bg-white border-2 border-slate-900 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+          <div>
+            <span class="bg-yellow-400 text-slate-950 text-xs font-black px-2.5 py-0.5 rounded">${c.code}</span>
+            <h3 class="font-bold text-slate-950 mt-2 text-base">${c.name}</h3>
+            <p class="text-xs text-slate-600 mt-1">Duration: <strong>${c.duration}</strong></p>
+          </div>
+          <button type="button" onclick="selectCourseAndGo('${c.code}')" class="mt-4 bg-slate-950 text-yellow-400 font-bold text-xs py-2 rounded hover:bg-slate-800">
+            Enroll in ${c.code}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function selectCourseAndGo(code) {
+      switchView('admission');
+      const cb = document.querySelector(`input[name="courses"][value="${code}"]`);
+      if (cb) cb.checked = true;
+    }
+
+    // MANUAL DATE OF BIRTH VALIDATION
+    const dobInput = document.getElementById('dob');
+    const dobFeedback = document.getElementById('dob-feedback');
+
+    dobInput.addEventListener('input', (e) => {
+      let digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+      let formatted = '';
+      if (digits.length > 0) formatted += digits.slice(0, 2);
+      if (digits.length > 2) formatted += '-' + digits.slice(2, 4);
+      if (digits.length > 4) formatted += '-' + digits.slice(4, 8);
+      e.target.value = formatted;
+      validateDOB(formatted);
+    });
+
+    function validateDOB(val) {
+      const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(val.trim());
+      if (!match) {
+        dobFeedback.textContent = 'Format required: DD-MM-YYYY (e.g. 15-08-2005)';
+        dobFeedback.className = 'text-[11px] mt-1 text-red-700 font-semibold';
+        return false;
+      }
+      const day = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10);
+      const year = parseInt(match[3], 10);
+
+      if (year < 1950 || year > 2023) {
+        dobFeedback.textContent = 'Enter a valid birth year (1950–2023).';
+        dobFeedback.className = 'text-[11px] mt-1 text-red-700 font-semibold';
+        return false;
+      }
+      if (month < 1 || month > 12) {
+        dobFeedback.textContent = 'Month must be between 01 and 12.';
+        dobFeedback.className = 'text-[11px] mt-1 text-red-700 font-semibold';
+        return false;
+      }
+      const maxDays = new Date(year, month, 0).getDate();
+      if (day < 1 || day > maxDays) {
+        dobFeedback.textContent = `Invalid day (${day}) for month ${String(month).padStart(2, '0')} in ${year}.`;
+        dobFeedback.className = 'text-[11px] mt-1 text-red-700 font-semibold';
+        return false;
+      }
+
+      dobFeedback.textContent = `Valid Date of Birth: ${val}`;
+      dobFeedback.className = 'text-[11px] mt-1 text-emerald-700 font-semibold';
+      return true;
+    }
+
+    // STUDENT PHOTO UPLOAD
+    const photoInput = document.getElementById('photoInput');
+    const photoPreview = document.getElementById('photo-preview');
+    const photoInfo = document.getElementById('photo-info');
+
+    photoInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!validTypes.includes(file.type.toLowerCase())) {
+        showToast('Only JPG, JPEG, and PNG images are allowed.', 'error');
+        photoInput.value = '';
+        return;
+      }
+      try {
+        const optimized = await resizeImageFile(file, 300, 360, 0.82);
+        uploadedPhotoDataUrl = optimized;
+        photoPreview.src = optimized;
+        photoInfo.textContent = `Ready: ${file.name} (optimized)`;
+        photoInfo.className = 'text-[11px] text-emerald-700 font-semibold';
+      } catch (err) {
+        showToast('Failed to process image. Try another JPG/PNG file.', 'error');
+      }
+    });
+
+    document.getElementById('clear-photo-btn').addEventListener('click', () => {
+      uploadedPhotoDataUrl = '';
+      photoInput.value = '';
+      photoPreview.src = DEFAULT_PHOTO_URL;
+      photoInfo.textContent = 'Auto-resized & optimized for report & PDF.';
+      photoInfo.className = 'text-[11px] text-slate-600';
+    });
+
+    function resizeImageFile(file, maxW, maxH, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width;
+            let h = img.height;
+            const ratio = Math.min(maxW / w, maxH / h, 1);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // SIGNATURE PAD
+    const sigCanvas = document.getElementById('signature-pad');
+    const sigCtx = sigCanvas.getContext('2d');
+    sigCtx.strokeStyle = '#0f172a';
+    sigCtx.lineWidth = 2.5;
+    sigCtx.lineCap = 'round';
+    let drawing = false;
+    let hasSignature = false;
+
+    function getCanvasPos(evt) {
+      const rect = sigCanvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      return {
+        x: ((clientX - rect.left) / rect.width) * sigCanvas.width,
+        y: ((clientY - rect.top) / rect.height) * sigCanvas.height
+      };
+    }
+
+    function startSign(e) {
+      e.preventDefault();
+      drawing = true;
+      hasSignature = true;
+      const pos = getCanvasPos(e);
+      sigCtx.beginPath();
+      sigCtx.moveTo(pos.x, pos.y);
+    }
+
+    function moveSign(e) {
+      if (!drawing) return;
+      e.preventDefault();
+      const pos = getCanvasPos(e);
+      sigCtx.lineTo(pos.x, pos.y);
+      sigCtx.stroke();
+    }
+
+    function endSign() {
+      drawing = false;
+    }
+
+    sigCanvas.addEventListener('mousedown', startSign);
+    sigCanvas.addEventListener('mousemove', moveSign);
+    window.addEventListener('mouseup', endSign);
+    sigCanvas.addEventListener('touchstart', startSign, { passive: false });
+    sigCanvas.addEventListener('touchmove', moveSign, { passive: false });
+    window.addEventListener('touchend', endSign);
+
+    document.getElementById('clear-sig-btn').addEventListener('click', () => {
+      sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+      hasSignature = false;
+    });
+
+    document.getElementById('admissionDate').value = new Date().toISOString().slice(0, 10);
+
+    document.getElementById('reset-form-btn').addEventListener('click', () => {
+      setTimeout(() => {
+        uploadedPhotoDataUrl = '';
+        photoPreview.src = DEFAULT_PHOTO_URL;
+        sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+        hasSignature = false;
+        dobFeedback.textContent = 'Type manually in DD-MM-YYYY format';
+        dobFeedback.className = 'text-[11px] mt-1 text-slate-600';
+        document.getElementById('admissionDate').value = new Date().toISOString().slice(0, 10);
+      }, 0);
+    });
+
+    // FORM SUBMISSION
+    document.getElementById('admission-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submit-admission-btn');
+
+      const studentName = document.getElementById('studentName').value.trim();
+      const dob = document.getElementById('dob').value.trim();
+      const gender = document.getElementById('gender').value;
+      const fatherName = document.getElementById('fatherName').value.trim();
+      const motherName = document.getElementById('motherName').value.trim();
+      const community = document.getElementById('community').value.trim();
+      const nationality = document.getElementById('nationality').value.trim() || 'Indian';
+      const studentMobile = document.getElementById('studentMobile').value.trim();
+      const parentMobile = document.getElementById('parentMobile').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      const villageWard = document.getElementById('villageWard').value.trim();
+      const policeStation = document.getElementById('policeStation').value.trim();
+      const postOffice = document.getElementById('postOffice').value.trim();
+      const district = document.getElementById('district').value.trim();
+      const state = document.getElementById('state').value.trim();
+      const pinCode = document.getElementById('pinCode').value.trim();
+      const aadhaarNumber = document.getElementById('aadhaarNumber').value.trim();
+
+      const referralCode = document.getElementById('referralCode').value.trim();
+      const referralName = document.getElementById('referralName').value.trim();
+
+      const qualEl = document.querySelector('input[name="qualification"]:checked');
+      const qualification = qualEl ? qualEl.value : '';
+
+      const selectedCourses = Array.from(document.querySelectorAll('input[name="courses"]:checked')).map((el) => el.value);
+
+      const payEl = document.querySelector('input[name="paymentMode"]:checked');
+      const paymentMode = payEl ? payEl.value : '';
+
+      const admissionDate = document.getElementById('admissionDate').value;
+      const batchTime = document.getElementById('batchTime').value;
+
+      if (!studentName || !fatherName || !motherName || !gender) {
+        showToast('Please fill all required Personal Details.', 'error');
+        return;
+      }
+      if (!validateDOB(dob)) {
+        showToast('Please enter a valid Date of Birth in DD-MM-YYYY format.', 'error');
+        dobInput.focus();
+        return;
+      }
+      if (!/^\d{10}$/.test(studentMobile) || !/^\d{10}$/.test(parentMobile)) {
+        showToast('Student and Parents mobile numbers must be 10 digits.', 'error');
+        return;
+      }
+      if (!villageWard || !policeStation || !postOffice || !district || !state || !/^\d{6}$/.test(pinCode)) {
+        showToast('Please complete all Address Details and enter a valid 6-digit PIN Code.', 'error');
+        return;
+      }
+      if (!qualification) {
+        showToast('Please select Qualification.', 'error');
+        return;
+      }
+      if (selectedCourses.length === 0) {
+        showToast('Please select at least one Computer Course.', 'error');
+        return;
+      }
+      if (!paymentMode || !admissionDate || !batchTime) {
+        showToast('Please select Payment Mode, Admission Date, and Batch Time.', 'error');
+        return;
+      }
+      if (!hasSignature) {
+        showToast('Please provide Student Signature before submitting.', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'SAVING TO DATABASE...';
+
+      try {
+        const fingerprint = `${studentName.toLowerCase()}|${dob}|${studentMobile}|${selectedCourses.sort().join(',')}`;
+        const existingList = await getAllStudentsFromDB();
+        const duplicate = existingList.find((item) => item.fingerprint === fingerprint);
+        if (duplicate) {
+          showToast(`Duplicate entry blocked! Existing Roll No: ${duplicate.rollNumber}`, 'error');
+          currentReportStudent = duplicate;
+          renderAdmissionReport(duplicate);
+          switchView('report');
+          return;
+        }
+
+        const rollNumber = await allocateNextRollNumber();
+        const signatureDataUrl = sigCanvas.toDataURL('image/png');
+        const fullAddress = `${villageWard}, PO: ${postOffice}, PS: ${policeStation}, Dist: ${district}, ${state} - ${pinCode}`;
+
+        const studentRecord = {
+          id: `ADM-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
+          rollNumber,
+          fingerprint,
+          createdAt: Date.now(),
+          studentName,
+          dob,
+          gender,
+          fatherName,
+          motherName,
+          community,
+          nationality,
+          photoUrl: uploadedPhotoDataUrl || DEFAULT_PHOTO_URL,
+          studentMobile,
+          parentMobile,
+          email,
+          villageWard,
+          policeStation,
+          postOffice,
+          district,
+          state,
+          pinCode,
+          aadhaarNumber,
+          fullAddress,
+          referralCode,
+          referralName,
+          qualification,
+          courses: selectedCourses,
+          courseText: selectedCourses.join(', '),
+          paymentMode,
+          paymentStatus: paymentMode === 'One Time (12 Months)' ? 'Paid' : 'Pending',
+          admissionDate,
+          batchTime,
+          signatureDataUrl
+        };
+
+        await saveStudentRecord(studentRecord);
+        await refreshStudentsCache();
+
+        currentReportStudent = studentRecord;
+        renderAdmissionReport(studentRecord);
+        showToast(`Admission Confirmed! Roll Number: ${rollNumber}`, 'success');
+        switchView('report');
+      } catch (err) {
+        console.error(err);
+        showToast('Database error while saving admission. Please retry.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'SUBMIT ADMISSION FORM';
+      }
+    });
+
+    // REPORT HTML BUILDERS
+    function buildSingleCopyHTML(s, copyLabel) {
+      return `
+        <div class="report-copy" style="border:2px solid #0f172a; background:#ffffff; padding:14px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #0f172a; padding-bottom:8px; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="${LOGO_DATA_URL}" alt="Academy Logo" style="width:54px; height:54px; border-radius:6px; border:1px solid #0f172a;" />
+              <div>
+                <div style="font-size:10px; font-weight:700; color:#b91c1c;">भारत सरकार द्वारा मान्यता प्राप्त • ISO 9001:2005 • MSME</div>
+                <div style="font-size:19px; font-weight:900; color:#0f172a; line-height:1.1;">COMPUTER ACADEMY <span style="background:#facc15; padding:0 5px;">GOH</span></div>
+                <div style="font-size:10px; color:#334155;">Near Bus Stand, Goh Rafiganj Road, Goh (Aurangabad) | Ph: 9556060616 | www.cabihar.in</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <span style="display:inline-block; background:#0f172a; color:#facc15; font-size:11px; font-weight:900; padding:3px 9px; border-radius:4px;">${copyLabel}</span>
+              <div style="font-size:12px; font-weight:900; color:#0f172a; margin-top:4px;">Roll No: <span style="background:#fef08a; padding:1px 6px; border:1px solid #0f172a;">${escapeHtml(s.rollNumber)}</span></div>
+              <div style="font-size:10px; color:#475569; margin-top:2px;">Adm. Date: ${escapeHtml(s.admissionDate)}</div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:12px; font-size:12px;">
+            <div style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:6px 12px;">
+              <div><strong>Student Name:</strong> ${escapeHtml(s.studentName)}</div>
+              <div><strong>Date of Birth:</strong> ${escapeHtml(s.dob)}</div>
+              <div><strong>Father's Name:</strong> ${escapeHtml(s.fatherName)}</div>
+              <div><strong>Mother's Name:</strong> ${escapeHtml(s.motherName)}</div>
+              <div><strong>Mobile No.:</strong> ${escapeHtml(s.studentMobile)}</div>
+              <div><strong>Batch Time:</strong> ${escapeHtml(s.batchTime)}</div>
+              <div><strong>Selected Course:</strong> <strong>${escapeHtml(s.courseText)}</strong></div>
+              <div><strong>Qualification:</strong> ${escapeHtml(s.qualification)}</div>
+              <div><strong>Payment Mode:</strong> ${escapeHtml(s.paymentMode)}</div>
+              <div><strong>Gender:</strong> ${escapeHtml(s.gender)}</div>
+              <div style="grid-column:span 2;"><strong>Address:</strong> ${escapeHtml(s.fullAddress)}</div>
+            </div>
+            <div style="width:96px; text-align:center; flex-shrink:0;">
+              <img src="${s.photoUrl || DEFAULT_PHOTO_URL}" alt="${escapeHtml(s.studentName)}" style="width:90px; height:106px; object-fit:cover; border:2px solid #0f172a; border-radius:4px;" />
+              <div style="font-size:10px; font-weight:600; color:#475569; margin-top:2px;">Student Photo</div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:14px; padding-top:10px; border-top:1px dashed #64748b; font-size:11px;">
+            <div>
+              ${s.signatureDataUrl ? `<img src="${s.signatureDataUrl}" alt="Student Signature" style="height:36px; object-fit:contain; margin-bottom:2px;" />` : '<div style="height:36px;"></div>'}
+              <div style="border-top:1px solid #0f172a; padding-top:2px; font-weight:700;">Student Signature</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="height:36px; display:flex; align-items:center; justify-content:flex-end;">
+                <span style="border:2px solid #0f172a; color:#0f172a; font-weight:900; font-size:10px; padding:2px 6px; border-radius:4px;">OFFICIAL SEAL</span>
+              </div>
+              <div style="border-top:1px solid #0f172a; padding-top:2px; font-weight:700;">Admin Signature &amp; Stamp (Ranjan Sharma)</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildDualReportHTML(s) {
+      return `
+        <div id="dual-report-sheet" style="background:#ffffff; padding:4px;">
+          ${buildSingleCopyHTML(s, 'STUDENT COPY')}
+          <div style="border-top:2px dashed #94a3b8; margin:10px 0;"></div>
+          ${buildSingleCopyHTML(s, 'OFFICE COPY')}
+        </div>
+      `;
+    }
+
+    function renderAdmissionReport(student) {
+      currentReportStudent = student;
+      const container = document.getElementById('report-container');
+      const subtitle = document.getElementById('report-subtitle');
+      if (!student) {
+        container.innerHTML = `<div class="bg-white border border-slate-300 rounded-lg p-8 text-center text-slate-600 text-sm">No report selected.</div>`;
+        return;
+      }
+      subtitle.textContent = `Roll Number: ${student.rollNumber} | Student: ${student.studentName} | Courses: ${student.courseText}`;
+      container.innerHTML = buildDualReportHTML(student);
+    }
+
+    // =========================================================================
+    // DUAL-ENGINE PRINT SYSTEM (Direct Print + Reliable A4 Print Window)
+    // =========================================================================
+    async function waitForAssetsReady(rootEl) {
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+      if (!rootEl) return;
+      const imgs = Array.from(rootEl.querySelectorAll('img'));
+      await Promise.all(imgs.map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((res) => {
+          img.onload = res;
+          img.onerror = res;
+        });
+      }));
+    }
+
+    function openPrintWindowFallback(mode, htmlContent) {
+      const isLandscape = mode === 'all-students';
+      const printWin = window.open('', '_blank', 'width=960,height=780');
+      if (!printWin) {
+        return false;
+      }
+      printWin.document.open();
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>Print – Computer Academy Goh</title>
+          <style>
+            @page {
+              size: A4 ${isLandscape ? 'landscape' : 'portrait'};
+              margin: 10mm;
+            }
+            body {
+              font-family: Arial, Helvetica, sans-serif;
+              background: #ffffff;
+              color: #0f172a;
+              margin: 0;
+              padding: 12px;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .print-toolbar {
+              background: #0f172a;
+              color: #facc15;
+              padding: 10px 14px;
+              margin-bottom: 12px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-radius: 6px;
+            }
+            .print-toolbar button {
+              background: #facc15;
+              color: #0f172a;
+              border: none;
+              padding: 8px 16px;
+              font-weight: 900;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 13px;
+            }
+            table { width: 100%; border-collapse: collapse; }
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; break-inside: avoid; }
+            @media print {
+              .print-toolbar { display: none !important; }
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-toolbar">
+            <span><strong>COMPUTER ACADEMY GOH</strong> – A4 Print Preview</span>
+            <button onclick="window.print()">PRINT NOW</button>
+          </div>
+          ${htmlContent}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.focus();
+                window.print();
+              }, 300);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+      return true;
+    }
+
+    async function executePrint(mode, htmlContent) {
+      const staging = document.getElementById('print-staging');
+      staging.innerHTML = htmlContent;
+      document.body.setAttribute('data-print-mode', mode);
+      await waitForAssetsReady(staging);
+
+      // Check if running inside an iframe/sandboxed preview where window.print() often fails
+      const isEmbedded = window.self !== window.top;
+      if (isEmbedded) {
+        const opened = openPrintWindowFallback(mode, htmlContent);
+        if (opened) {
+          document.body.removeAttribute('data-print-mode');
+          return;
+        }
+      }
+
+      let printEventFired = false;
+      const onBeforePrint = () => { printEventFired = true; };
+      window.addEventListener('beforeprint', onBeforePrint, { once: true });
+
+      try {
+        window.focus();
+        window.print();
+      } catch (e) {
+        console.warn('Direct print error:', e);
+      }
+
+      setTimeout(() => {
+        window.removeEventListener('beforeprint', onBeforePrint);
+        document.body.removeAttribute('data-print-mode');
+        if (!printEventFired) {
+          const opened = openPrintWindowFallback(mode, htmlContent);
+          if (!opened) {
+            showToast('Browser popup/print blocked. Allow popups or press Ctrl+P.', 'error');
+          }
+        }
+      }, 450);
+    }
+
+    // A. Print Admission Form
+    async function printAdmissionForm() {
+      const sName = document.getElementById('studentName').value.trim() || '______________________';
+      const dob = document.getElementById('dob').value.trim() || '____-____-______';
+      const gender = document.getElementById('gender').value || '________';
+      const fName = document.getElementById('fatherName').value.trim() || '______________________';
+      const mName = document.getElementById('motherName').value.trim() || '______________________';
+      const sMob = document.getElementById('studentMobile').value.trim() || '__________';
+      const pMob = document.getElementById('parentMobile').value.trim() || '__________';
+      const addr = `${document.getElementById('villageWard').value.trim() || '____'}, PO: ${document.getElementById('postOffice').value.trim() || '____'}, PS: ${document.getElementById('policeStation').value.trim() || '____'}, ${document.getElementById('district').value.trim() || 'Aurangabad'}, ${document.getElementById('state').value.trim() || 'Bihar'} - ${document.getElementById('pinCode').value.trim() || '______'}`;
+      const qual = (document.querySelector('input[name="qualification"]:checked') || {}).value || '________';
+      const courses = Array.from(document.querySelectorAll('input[name="courses"]:checked')).map((c) => c.value).join(', ') || '________';
+      const pay = (document.querySelector('input[name="paymentMode"]:checked') || {}).value || '________';
+      const admDate = document.getElementById('admissionDate').value || '____-__-__';
+      const batch = document.getElementById('batchTime').value || '________';
+      const photoSrc = uploadedPhotoDataUrl || DEFAULT_PHOTO_URL;
+      const sigSrc = hasSignature ? sigCanvas.toDataURL('image/png') : '';
+
+      const formPrintHtml = `
+        <div style="border:2px solid #0f172a; padding:16px; background:#fff; color:#0f172a; font-size:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0f172a; padding-bottom:10px; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="${LOGO_DATA_URL}" style="width:54px; height:54px;" />
+              <div>
+                <div style="font-size:10px; font-weight:700;">भारत सरकार द्वारा मान्यता प्राप्त • ISO 9001:2005 • MSME</div>
+                <div style="font-size:18px; font-weight:900;">COMPUTER ACADEMY GOH – ADMISSION FORM</div>
+                <div style="font-size:10px;">Near Bus Stand, Goh Rafiganj Road, Goh (Aurangabad) | Ph: 9556060616</div>
+              </div>
+            </div>
+            <img src="${photoSrc}" style="width:76px; height:88px; object-fit:cover; border:1.5px solid #0f172a;" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <div><strong>Student Name:</strong> ${escapeHtml(sName)}</div>
+            <div><strong>Date of Birth:</strong> ${escapeHtml(dob)}</div>
+            <div><strong>Gender:</strong> ${escapeHtml(gender)}</div>
+            <div><strong>Student Mobile:</strong> ${escapeHtml(sMob)}</div>
+            <div><strong>Father's Name:</strong> ${escapeHtml(fName)}</div>
+            <div><strong>Parents Mobile:</strong> ${escapeHtml(pMob)}</div>
+            <div><strong>Mother's Name:</strong> ${escapeHtml(mName)}</div>
+            <div><strong>Qualification:</strong> ${escapeHtml(qual)}</div>
+            <div style="grid-column:span 2;"><strong>Address:</strong> ${escapeHtml(addr)}</div>
+            <div><strong>Courses:</strong> ${escapeHtml(courses)}</div>
+            <div><strong>Payment Mode:</strong> ${escapeHtml(pay)}</div>
+            <div><strong>Admission Date:</strong> ${escapeHtml(admDate)}</div>
+            <div><strong>Batch Time:</strong> ${escapeHtml(batch)}</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:24px; padding-top:10px; border-top:1px dashed #334155;">
+            <div>
+              ${sigSrc ? `<img src="${sigSrc}" style="height:36px;" /><br/>` : '<div style="height:36px;"></div>'}
+              <strong>Student Signature</strong>
+            </div>
+            <div style="text-align:right;">
+              <div style="height:36px;"></div>
+              <strong>Authorized Signatory (Director: Ranjan Sharma)</strong>
+            </div>
+          </div>
+        </div>
+      `;
+      await executePrint('form', formPrintHtml);
+    }
+
+    // B & D. Print Admission Report
+    async function printStudentReportRecord(student) {
+      if (!student) {
+        showToast('No student report available to print.', 'error');
+        return;
+      }
+      renderAdmissionReport(student);
+      await executePrint('report', buildDualReportHTML(student));
+    }
+
+    document.getElementById('btn-print-report').addEventListener('click', () => {
+      printStudentReportRecord(currentReportStudent);
+    });
+
+    // Real PDF Download for Single Student Report
+    async function downloadStudentReportPDF(student) {
+      if (!student) {
+        showToast('No student report available to download.', 'error');
+        return;
+      }
+      try {
+        showToast('Generating A4 PDF report...', 'info');
+        renderAdmissionReport(student);
+        const target = document.getElementById('dual-report-sheet');
+        await waitForAssetsReady(target);
+
+        const canvas = await html2canvas(target, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff'
+        });
+        if (!canvas || canvas.width === 0 || canvas.height === 0) {
+          throw new Error('Empty canvas generated');
+        }
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 8;
+        const usableWidth = pageWidth - margin * 2;
+        const imgHeight = (canvas.height * usableWidth) / canvas.width;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        if (imgHeight <= pageHeight - margin * 2) {
+          pdf.addImage(imgData, 'JPEG', margin, margin, usableWidth, imgHeight);
+        } else {
+          let heightLeft = imgHeight;
+          let position = margin;
+          pdf.addImage(imgData, 'JPEG', margin, position, usableWidth, imgHeight);
+          heightLeft -= (pageHeight - margin * 2);
+          while (heightLeft > 0) {
+            position = heightLeft - imgHeight + margin;
+            pdf.addPage();
+            pdf.addImage(imgData, 'JPEG', margin, position, usableWidth, imgHeight);
+            heightLeft -= (pageHeight - margin * 2);
+          }
+        }
+
+        const safeName = (student.studentName || 'Student').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const fileName = `${student.rollNumber}-${safeName}.pdf`;
+        const blob = pdf.output('blob');
+        if (!blob || blob.size < 500) {
+          throw new Error('Generated PDF is empty');
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+
+        showToast(`Downloaded ${fileName}`, 'success');
+      } catch (err) {
+        console.error(err);
+        showToast(`PDF generation failed: ${err.message || 'Unknown error'}`, 'error');
+      }
+    }
+
+    document.getElementById('btn-download-report-pdf').addEventListener('click', () => {
+      downloadStudentReportPDF(currentReportStudent);
+    });
+
+    // C. Print ALL Students
+    function buildAllStudentsRegisterHTML(students) {
+      const rowsHtml = students.map((s, idx) => `
+        <tr>
+          <td style="border:1px solid #0f172a; padding:6px;">${idx + 1}</td>
+          <td style="border:1px solid #0f172a; padding:6px; font-weight:700;">${escapeHtml(s.studentName)}</td>
+          <td style="border:1px solid #0f172a; padding:6px;"><img src="${s.photoUrl || DEFAULT_PHOTO_URL}" style="width:32px; height:38px; object-fit:cover; border:1px solid #334155;" /></td>
+          <td style="border:1px solid #0f172a; padding:6px; font-family:monospace; font-weight:700;">${escapeHtml(s.rollNumber)}</td>
+          <td style="border:1px solid #0f172a; padding:6px;">${escapeHtml(s.courseText)}</td>
+          <td style="border:1px solid #0f172a; padding:6px; font-family:monospace;">${escapeHtml(s.studentMobile)}</td>
+          <td style="border:1px solid #0f172a; padding:6px;">${escapeHtml(s.admissionDate)}</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div style="background:#fff; color:#0f172a; font-size:11px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0f172a; padding-bottom:8px; margin-bottom:10px;">
+            <div>
+              <div style="font-size:16px; font-weight:900;">COMPUTER ACADEMY GOH – COMPLETE ADMITTED STUDENTS REGISTER</div>
+              <div style="font-size:10px;">Near Bus Stand, Goh Rafiganj Road, Goh (Aurangabad) | Total Students: ${students.length}</div>
+            </div>
+            <div style="text-align:right; font-size:10px;">Printed: ${new Date().toLocaleString()}</div>
+          </div>
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#facc15; color:#0f172a;">
+                <th style="border:1px solid #0f172a; padding:6px; text-align:left;">S.No</th>
+                <th style="border:1px solid #0f172a; padding:6px; text-align:left;">Student Name</th>
+                <th style="border:1px solid #0f172a; padding:6px; text-align:left;">Photo</th>
+                <th style="border:1px solid #0f172a; padding:6px; text-align:left;">Roll Number</th>
+                <th style="border:1px solid #0f172a; padding:6px; text-align:left;">Course</th>
+                <th style="border:1px solid #0f172a; padding:6px; text-align:left;">Mobile Number</th>
+                <th style="border:1px solid #0f172a; padding:6px; text-align:left;">Admission Date</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml || '<tr><td colspan="7" style="border:1px solid #0f172a; padding:10px; text-align:center;">No records found</td></tr>'}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    document.getElementById('btn-print-all-students').addEventListener('click', async () => {
+      const freshAll = await getAllStudentsFromDB();
+      if (freshAll.length === 0) {
+        showToast('No admitted students in database to print.', 'error');
+        return;
+      }
+      await executePrint('all-students', buildAllStudentsRegisterHTML(freshAll));
+    });
+
+    // Download ALL Students PDF
+    document.getElementById('btn-download-all-pdf').addEventListener('click', async () => {
+      try {
+        const freshAll = await getAllStudentsFromDB();
+        if (freshAll.length === 0) {
+          showToast('No admitted students in database to export.', 'error');
+          return;
+        }
+        showToast(`Building PDF register for ${freshAll.length} students...`, 'info');
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('COMPUTER ACADEMY GOH - ALL ADMITTED STUDENTS REGISTER', 14, 14);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Near Bus Stand, Goh Rafiganj Road, Goh (Aurangabad) | Total Records: ${freshAll.length}`, 14, 20);
+
+        const bodyRows = freshAll.map((s, idx) => [
+          idx + 1,
+          s.studentName || '',
+          s.rollNumber || '',
+          s.fatherName || '',
+          s.courseText || '',
+          s.studentMobile || '',
+          s.admissionDate || '',
+          s.paymentMode || ''
+        ]);
+
+        doc.autoTable({
+          startY: 24,
+          head: [['S.No', 'Student Name', 'Roll No', "Father's Name", 'Course', 'Mobile', 'Admission Date', 'Payment Mode']],
+          body: bodyRows,
+          styles: { fontSize: 8, cellPadding: 2.5 },
+          headStyles: { fillColor: [15, 23, 42], textColor: [250, 204, 21] }
+        });
+
+        const fileName = `Computer-Academy-Goh-All-Students-${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(fileName);
+        showToast(`Downloaded ${fileName}`, 'success');
+      } catch (err) {
+        console.error(err);
+        showToast(`Failed to generate All Students PDF: ${err.message}`, 'error');
+      }
+    });
+
+    // STUDENT LOGIN LOOKUP
+    document.getElementById('student-login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const roll = document.getElementById('stuLookupRoll').value.trim().toUpperCase();
+      const mob = document.getElementById('stuLookupMobile').value.trim();
+      const list = await getAllStudentsFromDB();
+      const found = list.find((s) => s.rollNumber.toUpperCase() === roll && s.studentMobile === mob);
+      if (!found) {
+        showToast('No matching student record found. Check Roll No & Mobile.', 'error');
+        return;
+      }
+      renderAdmissionReport(found);
+      switchView('report');
+      showToast(`Loaded Admission Report for ${found.studentName}`, 'success');
+    });
+
+    // ADMIN DASHBOARD
+    document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = document.getElementById('adminUser').value.trim();
+      const p = document.getElementById('adminPass').value;
+      if (u === ADMIN_CREDS.user && p === ADMIN_CREDS.pass) {
+        isAdminLoggedIn = true;
+        sessionStorage.setItem('cag_admin_auth', '1');
+        showToast('Welcome, Admin (Computer Academy Goh)', 'success');
+        switchView('admin-dashboard');
+      } else {
+        showToast('Invalid Admin credentials.', 'error');
+      }
+    });
+
+    document.getElementById('btn-admin-logout').addEventListener('click', () => {
+      isAdminLoggedIn = false;
+      sessionStorage.removeItem('cag_admin_auth');
+      switchView('admin-login');
+      showToast('Logged out of Admin Dashboard', 'info');
+    });
+
+    function updateDashboardStats() {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const monthPrefix = todayStr.slice(0, 7);
+
+      const total = allStudents.length;
+      const todayCount = allStudents.filter((s) => s.admissionDate === todayStr).length;
+      const monthlyCount = allStudents.filter((s) => (s.admissionDate || '').startsWith(monthPrefix)).length;
+      const paidCount = allStudents.filter((s) => s.paymentStatus === 'Paid').length;
+      const pendingCount = total - paidCount;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-today').textContent = todayCount;
+      document.getElementById('stat-courses').textContent = COURSES_CATALOG.length;
+      document.getElementById('stat-monthly').textContent = monthlyCount;
+      document.getElementById('stat-paid').textContent = paidCount;
+      document.getElementById('stat-pending').textContent = pendingCount;
+    }
+
+    function getFilteredStudents() {
+      const q = (document.getElementById('filter-search').value || '').trim().toLowerCase();
+      const course = document.getElementById('filter-course').value;
+      const dateVal = document.getElementById('filter-date').value;
+
+      return allStudents.filter((s) => {
+        if (course && !(s.courses || []).includes(course)) return false;
+        if (dateVal && s.admissionDate !== dateVal) return false;
+        if (q) {
+          const hay = `${s.studentName} ${s.rollNumber} ${s.studentMobile} ${s.fatherName} ${s.courseText}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function renderAdminTable() {
+      const tbody = document.getElementById('admin-students-tbody');
+      const filtered = getFilteredStudents();
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = (currentPage - 1) * PAGE_SIZE;
+      const slice = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+      document.getElementById('filtered-count-label').textContent = `Showing ${filtered.length} of ${allStudents.length} admitted students`;
+      document.getElementById('pagination-info').textContent = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('btn-prev-page').disabled = currentPage <= 1;
+      document.getElementById('btn-next-page').disabled = currentPage >= totalPages;
+
+      if (slice.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" class="p-6 text-center text-slate-500 font-semibold">No student records match your current view.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = slice.map((s, i) => {
+        const serial = startIdx + i + 1;
+        return `
+          <tr class="hover:bg-yellow-50/70">
+            <td class="p-2 border font-semibold">${serial}</td>
+            <td class="p-2 border font-bold text-slate-950">${escapeHtml(s.studentName)}</td>
+            <td class="p-2 border"><img src="${s.photoUrl || DEFAULT_PHOTO_URL}" alt="${escapeHtml(s.studentName)}" class="w-9 h-11 object-cover rounded border border-slate-400" /></td>
+            <td class="p-2 border font-mono font-bold text-slate-900">${escapeHtml(s.rollNumber)}</td>
+            <td class="p-2 border">${escapeHtml(s.fatherName)}</td>
+            <td class="p-2 border font-mono">${escapeHtml(s.studentMobile)}</td>
+            <td class="p-2 border font-semibold">${escapeHtml(s.courseText)}</td>
+            <td class="p-2 border">${escapeHtml(s.qualification)}</td>
+            <td class="p-2 border font-mono">${escapeHtml(s.admissionDate)}</td>
+            <td class="p-2 border">${escapeHtml(s.paymentMode)}</td>
+            <td class="p-2 border">${escapeHtml(s.batchTime)}</td>
+            <td class="p-2 border whitespace-nowrap">
+              <button type="button" onclick="openStudentModal('${s.id}')" class="bg-slate-900 text-yellow-400 px-2 py-1 rounded font-bold text-[11px] mr-1">View / Edit</button>
+              <button type="button" onclick="openStudentInReport('${s.id}')" class="bg-yellow-400 text-slate-950 px-2 py-1 rounded font-bold text-[11px]">VIEW REPORT</button>
+            </td>
+            <td class="p-2 border whitespace-nowrap">
+              <button type="button" onclick="printById('${s.id}')" class="bg-emerald-700 text-white px-2 py-1 rounded font-bold text-[11px] mr-1">PRINT REPORT</button>
+              <button type="button" onclick="downloadPdfById('${s.id}')" class="bg-blue-700 text-white px-2 py-1 rounded font-bold text-[11px]">DOWNLOAD PDF</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    ['filter-search', 'filter-course', 'filter-date'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', () => {
+        currentPage = 1;
+        renderAdminTable();
+      });
+    });
+
+    document.getElementById('btn-clear-filters').addEventListener('click', () => {
+      document.getElementById('filter-search').value = '';
+      document.getElementById('filter-course').value = '';
+      document.getElementById('filter-date').value = '';
+      currentPage = 1;
+      renderAdminTable();
+    });
+
+    document.getElementById('btn-prev-page').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderAdminTable();
+      }
+    });
+
+    document.getElementById('btn-next-page').addEventListener('click', () => {
+      currentPage++;
+      renderAdminTable();
+    });
+
+    function findStudentById(id) {
+      return allStudents.find((s) => s.id === id) || null;
+    }
+
+    function openStudentInReport(id) {
+      const s = findStudentById(id);
+      if (!s) return;
+      renderAdmissionReport(s);
+      switchView('report');
+    }
+
+    function printById(id) {
+      const s = findStudentById(id);
+      if (s) printStudentReportRecord(s);
+    }
+
+    function downloadPdfById(id) {
+      const s = findStudentById(id);
+      if (s) downloadStudentReportPDF(s);
+    }
+
+    function openStudentModal(id) {
+      const s = findStudentById(id);
+      if (!s) return;
+      const modal = document.getElementById('student-modal');
+      document.getElementById('modal-title').textContent = `${s.studentName} (${s.rollNumber})`;
+      document.getElementById('modal-body').innerHTML = `
+        <div class="flex items-center gap-4">
+          <img src="${s.photoUrl || DEFAULT_PHOTO_URL}" class="w-24 h-28 object-cover rounded border-2 border-slate-900" />
+          <div class="space-y-1">
+            <div><strong>Roll Number:</strong> ${escapeHtml(s.rollNumber)}</div>
+            <div><strong>DOB:</strong> ${escapeHtml(s.dob)} | <strong>Gender:</strong> ${escapeHtml(s.gender)}</div>
+            <div><strong>Address:</strong> ${escapeHtml(s.fullAddress)}</div>
+          </div>
+        </div>
+        <form id="edit-student-form" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
+          <div>
+            <label class="field-label">Student Name</label>
+            <input name="studentName" value="${escapeAttr(s.studentName)}" class="form-input" required />
+          </div>
+          <div>
+            <label class="field-label">Father's Name</label>
+            <input name="fatherName" value="${escapeAttr(s.fatherName)}" class="form-input" required />
+          </div>
+          <div>
+            <label class="field-label">Mobile Number</label>
+            <input name="studentMobile" value="${escapeAttr(s.studentMobile)}" class="form-input" required />
+          </div>
+          <div>
+            <label class="field-label">Batch Time</label>
+            <input name="batchTime" value="${escapeAttr(s.batchTime)}" class="form-input" required />
+          </div>
+          <div>
+            <label class="field-label">Payment Mode</label>
+            <input name="paymentMode" value="${escapeAttr(s.paymentMode)}" class="form-input" required />
+          </div>
+          <div>
+            <label class="field-label">Payment Status</label>
+            <select name="paymentStatus" class="form-input">
+              <option value="Paid" ${s.paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
+              <option value="Pending" ${s.paymentStatus !== 'Paid' ? 'selected' : ''}>Pending</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2 flex justify-end gap-2 pt-2">
+            <button type="submit" class="bg-slate-950 text-yellow-400 font-bold px-4 py-2 rounded">Save Changes</button>
+          </div>
+        </form>
+      `;
+
+      document.getElementById('edit-student-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const fd = new FormData(ev.target);
+        const updated = {
+          ...s,
+          studentName: fd.get('studentName').trim(),
+          fatherName: fd.get('fatherName').trim(),
+          studentMobile: fd.get('studentMobile').trim(),
+          batchTime: fd.get('batchTime').trim(),
+          paymentMode: fd.get('paymentMode').trim(),
+          paymentStatus: fd.get('paymentStatus')
+        };
+        await saveStudentRecord(updated);
+        await refreshStudentsCache();
+        closeStudentModal();
+        showToast(`Updated record for ${updated.rollNumber}`, 'success');
+      });
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeStudentModal() {
+      const modal = document.getElementById('student-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('btn-export-excel').addEventListener('click', async () => {
+      const fresh = await getAllStudentsFromDB();
+      if (fresh.length === 0) {
+        showToast('No student records to export.', 'error');
+        return;
+      }
+      const rows = fresh.map((s, idx) => ({
+        'S.No': idx + 1,
+        'Roll Number': s.rollNumber,
+        'Student Name': s.studentName,
+        'DOB': s.dob,
+        "Father's Name": s.fatherName,
+        "Mother's Name": s.motherName,
+        'Mobile': s.studentMobile,
+        'Course': s.courseText,
+        'Qualification': s.qualification,
+        'Payment Mode': s.paymentMode,
+        'Payment Status': s.paymentStatus,
+        'Admission Date': s.admissionDate,
+        'Batch Time': s.batchTime,
+        'Address': s.fullAddress
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'AdmittedStudents');
+      XLSX.writeFile(wb, `Computer_Academy_Goh_Students_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      showToast('Excel (.xlsx) downloaded.', 'success');
+    });
+
+    function downloadJsonBackup(records) {
+      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), total: records.length, students: records }, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CAG_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    document.getElementById('btn-backup-json').addEventListener('click', async () => {
+      const fresh = await getAllStudentsFromDB();
+      downloadJsonBackup(fresh);
+      showToast(`JSON backup saved (${fresh.length} records).`, 'success');
+    });
+
+    document.getElementById('btn-sim-200').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-sim-200');
+      btn.disabled = true;
+      btn.textContent = 'RUNNING 200...';
+      try {
+        const sampleCourses = ['CCA', 'DCA', 'ADCA', 'PGDCA', 'TALLY', 'DTP'];
+        const today = new Date().toISOString().slice(0, 10);
+        const tasks = Array.from({ length: 200 }, (_, idx) => async () => {
+          const rollNumber = await allocateNextRollNumber();
+          const num = idx + 1;
+          const rec = {
+            id: `SIM-${Date.now()}-${num}-${Math.random().toString(36).slice(2, 6)}`,
+            rollNumber,
+            fingerprint: `sim-${Date.now()}-${num}`,
+            createdAt: Date.now() + num,
+            studentName: `Test Student ${num}`,
+            dob: '15-08-2004',
+            gender: num % 2 === 0 ? 'Female' : 'Male',
+            fatherName: `Guardian ${num}`,
+            motherName: `Mother ${num}`,
+            community: 'BC',
+            nationality: 'Indian',
+            photoUrl: DEFAULT_PHOTO_URL,
+            studentMobile: String(9000000000 + num).slice(0, 10),
+            parentMobile: String(8000000000 + num).slice(0, 10),
+            email: '',
+            villageWard: `Ward ${((num - 1) % 18) + 1}`,
+            policeStation: 'Goh',
+            postOffice: 'Goh',
+            district: 'Aurangabad',
+            state: 'Bihar',
+            pinCode: '824203',
+            aadhaarNumber: '',
+            fullAddress: `Ward ${((num - 1) % 18) + 1}, PO: Goh, PS: Goh, Dist: Aurangabad, Bihar - 824203`,
+            referralCode: '',
+            referralName: '',
+            qualification: 'Intermediate',
+            courses: [sampleCourses[num % sampleCourses.length]],
+            courseText: sampleCourses[num % sampleCourses.length],
+            paymentMode: num % 3 === 0 ? 'One Time (12 Months)' : 'Monthly',
+            paymentStatus: num % 3 === 0 ? 'Paid' : 'Pending',
+            admissionDate: today,
+            batchTime: '08:00 AM - 09:00 AM',
+            signatureDataUrl: ''
+          };
+          await saveStudentRecord(rec);
+          return rollNumber;
+        });
+
+        const assignedRolls = await Promise.all(tasks.map((fn) => fn()));
+        const uniqueRolls = new Set(assignedRolls);
+        await refreshStudentsCache();
+        showToast(`200 concurrent admissions saved! Unique Roll Nos: ${uniqueRolls.size}/200`, 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('200-admission simulation encountered an error.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'TEST 200 ADMISSIONS';
+      }
+    });
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/`/g, '&#96;');
+    }
+
+    renderCoursesGrid();
+    refreshStudentsCache();
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <title>Hello, World!</title>
+</head>
+<body>
+  <h1>
+          Developer by:- Satish kumarravi 
+  </h1>
+</body>
+</html>
